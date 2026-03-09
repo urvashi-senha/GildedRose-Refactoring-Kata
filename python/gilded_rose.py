@@ -32,36 +32,51 @@ class GildedRose(object):
         if not self.is_sulfuras(item):
             item.sell_in -= 1
 
+    def update_normal(self, item):
+        if item.quality > 0:
+            self.decrease_quality(item)
+
+
+    def update_aged_brie(self, item):
+        if item.quality < 50:
+            self.increase_quality(item)
+
+
+    def update_backstage(self, item):
+        if item.quality < 50:
+            self.increase_quality(item)
+
+            if item.sell_in < 11:
+                self.increase_quality(item)
+
+            if item.sell_in < 6:
+                self.increase_quality(item)
+
+    def update_item(self, item):
+        if self.is_sulfuras(item):
+            return
+
+        if self.is_aged_brie(item):
+            self.update_aged_brie(item)
+        elif self.is_backstage_pass(item):
+            self.update_backstage(item)
+        else:
+            self.update_normal(item)
+
+        self.decrease_sell_in(item)
+
+        if item.sell_in < 0:
+            if self.is_aged_brie(item):
+                self.increase_quality(item)
+            elif self.is_backstage_pass(item):
+                item.quality = 0
+            else:
+                self.decrease_quality(item)
+
     def update_quality(self):
         for item in self.items:
-            if not self.is_aged_brie(item) and not self.is_backstage_pass(item):
-                if item.quality > 0:
-                    if not self.is_sulfuras(item):
-                        self.decrease_quality(item)
-            else:
-                if item.quality < 50:
-                    self.increase_quality(item)
-                    if self.is_backstage_pass(item):
-                        if item.sell_in < 11:
-                            if item.quality < 50:
-                                self.increase_quality(item)
-                        if item.sell_in < 6:
-                            if item.quality < 50:
-                                self.increase_quality(item)
-         
-            self.decrease_sell_in(item)
-            
-            if item.sell_in < 0:
-                if not self.is_aged_brie(item):
-                    if not self.is_backstage_pass(item):
-                        if item.quality > 0:
-                            if not self.is_sulfuras(item):
-                                self.decrease_quality(item)
-                    else:
-                        item.quality = 0
-                else:
-                    if item.quality < 50:
-                        self.increase_quality(item)
+            self.update_item(item)
+        
 
 
 class Item:
