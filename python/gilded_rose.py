@@ -37,30 +37,31 @@ class GildedRose(object):
             if not self.is_aged_brie(item) and not self.is_backstage_pass(item):
                 if item.quality > 0:
                     if not self.is_sulfuras(item):
-                        item.quality = item.quality - 1
+                        self.decrease_quality(item)
             else:
                 if item.quality < 50:
-                    item.quality = item.quality + 1
+                    self.increase_quality(item)
                     if self.is_backstage_pass(item):
                         if item.sell_in < 11:
                             if item.quality < 50:
-                                item.quality = item.quality + 1
+                                self.increase_quality(item)
                         if item.sell_in < 6:
                             if item.quality < 50:
-                                item.quality = item.quality + 1
-            if not self.is_sulfuras(item):
-                item.sell_in = item.sell_in - 1
+                                self.increase_quality(item)
+         
+            self.decrease_sell_in(item)
+            
             if item.sell_in < 0:
                 if not self.is_aged_brie(item):
                     if not self.is_backstage_pass(item):
                         if item.quality > 0:
                             if not self.is_sulfuras(item):
-                                item.quality = item.quality - 1
+                                self.decrease_quality(item)
                     else:
-                        item.quality = item.quality - item.quality
+                        item.quality = 0
                 else:
                     if item.quality < 50:
-                        item.quality = item.quality + 1
+                        self.increase_quality(item)
 
 
 class Item:
