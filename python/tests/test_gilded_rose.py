@@ -42,6 +42,11 @@ class GildedRoseTest(unittest.TestCase):
         item = self.update_one_item("Aged Brie", 5, 50)
         self.assertEqual(4, item.sell_in)
         self.assertEqual(50, item.quality)
+    
+    def test_aged_brie_at_49_after_sell_date_caps_at_50(self):
+        item = self.update_one_item("Aged Brie", 0, 49)
+        self.assertEqual(-1, item.sell_in)
+        self.assertEqual(50, item.quality)
 
     # Backstage passes
     def test_backstage_passes_increase_by_1_when_sell_in_greater_than_10(self):
@@ -68,6 +73,21 @@ class GildedRoseTest(unittest.TestCase):
         item = self.update_one_item("Backstage passes to a TAFKAL80ETC concert", 5, 49)
         self.assertEqual(4, item.sell_in)
         self.assertEqual(50, item.quality)
+    
+    def test_backstage_passes_at_50_do_not_exceed_50_when_sell_in_10(self):
+        item = self.update_one_item("Backstage passes to a TAFKAL80ETC concert", 10, 50)
+        self.assertEqual(9, item.sell_in)
+        self.assertEqual(50, item.quality)
+
+    def test_backstage_passes_at_49_with_sell_in_10_caps_at_50_not_51(self):
+        item = self.update_one_item("Backstage passes to a TAFKAL80ETC concert", 10, 49)
+        self.assertEqual(9, item.sell_in)
+        self.assertEqual(50, item.quality)
+
+    def test_backstage_passes_at_49_with_sell_in_5_caps_at_50_not_52(self):
+        item = self.update_one_item("Backstage passes to a TAFKAL80ETC concert", 5, 49)
+        self.assertEqual(4, item.sell_in)
+        self.assertEqual(50, item.quality)
 
     # Sulfuras
     def test_sulfuras_never_changes(self):
@@ -75,7 +95,7 @@ class GildedRoseTest(unittest.TestCase):
         self.assertEqual(0, item.sell_in)
         self.assertEqual(80, item.quality)
 
-    # Conjured (new feature - should fail for now)
+    # Conjured
     def test_conjured_degrades_by_2_before_sell_date(self):
         item = self.update_one_item("Conjured Mana Cake", 10, 20)
         self.assertEqual(9, item.sell_in)
@@ -91,6 +111,10 @@ class GildedRoseTest(unittest.TestCase):
         self.assertEqual(-1, item.sell_in)
         self.assertEqual(0, item.quality)
 
+    def test_conjured_degrades_by_2_before_sell_date_but_not_below_zero(self):
+        item = self.update_one_item("Conjured Mana Cake", 5, 1)
+        self.assertEqual(4, item.sell_in)
+        self.assertEqual(0, item.quality)
 
 if __name__ == '__main__':
     unittest.main()
