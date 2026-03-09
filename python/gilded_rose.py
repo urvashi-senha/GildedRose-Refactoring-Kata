@@ -51,6 +51,9 @@ class GildedRose(object):
 
             if item.sell_in < 6:
                 self.increase_quality(item)
+                
+    def update_conjured(self, item):
+        self.decrease_quality(item, amount=2)
 
     def update_item(self, item):
         if self.is_sulfuras(item):
@@ -60,6 +63,8 @@ class GildedRose(object):
             self.update_aged_brie(item)
         elif self.is_backstage_pass(item):
             self.update_backstage(item)
+        elif self.is_conjured(item):
+            self.update_conjured(item)
         else:
             self.update_normal(item)
 
@@ -70,6 +75,8 @@ class GildedRose(object):
                 self.increase_quality(item)
             elif self.is_backstage_pass(item):
                 item.quality = 0
+            elif self.is_conjured(item):
+                self.decrease_quality(item, amount=2)
             else:
                 self.decrease_quality(item)
 
