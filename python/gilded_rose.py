@@ -13,6 +13,7 @@ class GildedRose(object):
     MIN_QUALITY = 0
     BACKSTAGE_10_DAYS = 10
     BACKSTAGE_5_DAYS = 5
+    SULFURAS_QUALITY = 80
 
     def __init__(self, items):
         self.items = items
@@ -74,6 +75,9 @@ class GildedRose(object):
     # to be added without modifying GildedRose.
     def update_item(self, item):
         if self.is_sulfuras(item):
+            # Sulfuras is a legendary item:
+            # quality always 80 and sell_in never changes
+            item.quality = self.SULFURAS_QUALITY
             return
 
         if self.is_aged_brie(item):
