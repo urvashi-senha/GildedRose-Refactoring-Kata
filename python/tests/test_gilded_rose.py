@@ -84,9 +84,9 @@ class GildedRoseTest(unittest.TestCase):
         self.assertEqual(9, item.sell_in)
         self.assertEqual(50, item.quality)
 
-    def test_backstage_passes_at_49_with_sell_in_5_caps_at_50_not_52(self):
-        item = self.update_one_item("Backstage passes to a TAFKAL80ETC concert", 5, 49)
-        self.assertEqual(4, item.sell_in)
+    def test_backstage_passes_increase_by_3_when_sell_in_is_1_caps_at_50(self):
+        item = self.update_one_item("Backstage passes to a TAFKAL80ETC concert", 1, 49)
+        self.assertEqual(0, item.sell_in)
         self.assertEqual(50, item.quality)
 
     # Sulfuras
