@@ -1,34 +1,11 @@
 # -*- coding: utf-8 -*-
 
-
-class GildedRose(object):
-    # Item types
-    AGED_BRIE = "Aged Brie"
-    BACKSTAGE = "Backstage passes to a TAFKAL80ETC concert"
-    SULFURAS = "Sulfuras, Hand of Ragnaros"
-    CONJURED = "Conjured Mana Cake"
-
-    # Business rules
+class ItemUpdator:
     MAX_QUALITY = 50
     MIN_QUALITY = 0
-    BACKSTAGE_10_DAYS = 10
-    BACKSTAGE_5_DAYS = 5
-    SULFURAS_QUALITY = 80
 
-    def __init__(self, items):
-        self.items = items
-
-    def is_aged_brie(self, item):
-        return item.name == self.AGED_BRIE
-
-    def is_backstage_pass(self, item):
-        return item.name == self.BACKSTAGE
-
-    def is_sulfuras(self, item):
-        return item.name == self.SULFURAS
-
-    def is_conjured(self, item):
-        return item.name == self.CONJURED
+    def update(self, item):
+        raise NotImplementedError("to be defined in sub classes")
 
     def decrease_quality(self, item, amount=1):
         item.quality = max(self.MIN_QUALITY, item.quality - amount)
@@ -37,66 +14,84 @@ class GildedRose(object):
         item.quality = min(self.MAX_QUALITY, item.quality + amount)
 
     def decrease_sell_in(self, item):
-        if not self.is_sulfuras(item):
             item.sell_in -= 1
 
-    def update_normal(self, item):
-        self.decrease_quality(item)
+class AgedBrieUpdator(ItemUpdator):
 
-    def update_aged_brie(self, item):
-        self.increase_quality(item)
-
-    def update_backstage(self, item):
-        self.increase_quality(item)
-
-        if item.sell_in <= self.BACKSTAGE_10_DAYS:
+    def update(self, item):
+         self.decrease_sell_in(item)
+         self.increase_quality(item)
+         if item.sell_in < 0:
             self.increase_quality(item)
 
-        if item.sell_in <= self.BACKSTAGE_5_DAYS:
-            self.increase_quality(item)
 
-    def update_conjured(self, item):
-        self.decrease_quality(item, amount=2)
+class BackstagePassUpdator(ItemUpdator):
 
-    def update_expired_item(self, item):
-        if self.is_aged_brie(item):
-            self.increase_quality(item)
-        elif self.is_backstage_pass(item):
+    BACKSTAGE_10_DAYS = 10
+    BACKSTAGE_5_DAYS = 5
+
+    def update(self, item):
+        if item.sell_in <= 0:
             item.quality = self.MIN_QUALITY
-        elif self.is_conjured(item):
-            self.decrease_quality(item, amount=2)
         else:
-            self.decrease_quality(item)
-
-    # Design note:
-    # Item behavior is currently dispatched with conditionals for simplicity and readability.
-    # In a larger system with many item types, this could be refactored into a factory that
-    # returns a dedicated updater per item (Strategy pattern), allowing new item behaviors
-    # to be added without modifying GildedRose.
-    def update_item(self, item):
-        if self.is_sulfuras(item):
-            # Sulfuras is a legendary item:
-            # quality always 80 and sell_in never changes
-            item.quality = self.SULFURAS_QUALITY
-            return
-
-        if self.is_aged_brie(item):
-            self.update_aged_brie(item)
-        elif self.is_backstage_pass(item):
-            self.update_backstage(item)
-        elif self.is_conjured(item):
-            self.update_conjured(item)
-        else:
-            self.update_normal(item)
+            self.increase_quality(item)
+            if item.sell_in <= self.BACKSTAGE_10_DAYS:
+                self.increase_quality(item)
+            if item.sell_in <= self.BACKSTAGE_5_DAYS:
+                self.increase_quality(item)
 
         self.decrease_sell_in(item)
 
+class NormalItemUpdator(ItemUpdator):
+    def update(self, item):
+        self.decrease_sell_in(item)
+        self.decrease_quality(item)
         if item.sell_in < 0:
-            self.update_expired_item(item)
+            self.decrease_quality(item)
+
+
+class ConjuredItemUpdator(ItemUpdator):
+    def update(self, item):
+        self.decrease_sell_in(item)
+        self.decrease_quality(item, amount=2)
+        if item.sell_in < 0:
+            self.decrease_quality(item, amount=2)
+
+class SulphurasItemUpdator(ItemUpdator):
+    SULFURAS_QUALITY = 80
+    def update(self, item):
+        self.quality = self.SULFURAS_QUALITY
+
+class ItemUpdatorFactory:
+    
+    AGED_BRIE = "Aged Brie"
+    BACKSTAGE = "Backstage passes to a TAFKAL80ETC concert"
+    SULFURAS = "Sulfuras, Hand of Ragnaros"
+    CONJURED = "Conjured Mana Cake"
+
+    @staticmethod
+    def get_updator(item):
+        if item.name == ItemUpdatorFactory.AGED_BRIE:
+            return AgedBrieUpdator()
+        elif item.name == ItemUpdatorFactory.BACKSTAGE:
+            return BackstagePassUpdator()
+        elif  item.name == ItemUpdatorFactory.CONJURED:
+            return ConjuredItemUpdator()
+        elif item.name == ItemUpdatorFactory.SULFURAS:
+            return SulphurasItemUpdator()
+        else:
+            return NormalItemUpdator()
+
+
+
+class GildedRose(object):
+    def __init__(self, items):
+        self.items = items
 
     def update_quality(self):
         for item in self.items:
-            self.update_item(item)
+            updator = ItemUpdatorFactory.get_updator(item)
+            updator.update(item)
 
 
 class Item:

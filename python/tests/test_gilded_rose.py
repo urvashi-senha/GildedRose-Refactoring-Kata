@@ -118,3 +118,8 @@ class GildedRoseTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
+#python texttest_fixture.py 10
+#pytest tests/test_gilded_rose.py -q
